@@ -1,0 +1,11 @@
+
+co2:
+  configuration: 'run=1;driver=/dev/co2mini1;sleep=5;'
+
+prog:
+  configuration: 'v=1'
+
+outputProvider:
+  path:  '/home/ecosteer/dop/ecosteer_examples/sensor_stream/provider/python/presentation/output/mqtt/pres_output_mqtt.py'
+  class: 'outputMqttPaho'
+  configuration: 'h=test.mosquitto.org;p=1883;t=co2_sensor/test;rc=10;ka=60;q=1;tout=60;prf=grz_'
