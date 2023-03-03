@@ -1,12 +1,12 @@
 #   ver:    1.0
-#   date:   27/01/2023
+#   date:   03/03/2023
 #   author: georgiana-bud
 
-import sys
-
+import argparse
 import datetime
-import time
+import os
 import signal
+import time
 from threading import Event, Thread, Lock
 
 from externals.CO2Meter import *
@@ -14,9 +14,19 @@ from common.python.utils import DopUtils
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
 
-#   usage: sensor.py configFile.yaml
+#   usage: sensor.py -c configFile.yaml
 
 global_stop_event: DopStopEvent
+
+def get_args(argl = None):
+    
+    parser = argparse.ArgumentParser(description="Sensor stream program.")
+    parser.add_argument("-c", "--config",
+        help = "The configuration file for the main program.", 
+        required = True)
+    
+    return parser.parse_args()
+
 
 def signalHandlerDefault(signalNumber, frame):
     print('Received:', signalNumber)
@@ -49,7 +59,7 @@ class PublisherUserdata:
     def output_provider(self, output_provider):
         self._output_provider = output_provider 
 
-    @property 
+    @property  
     def publish_lock(self):
         return self._publish_lock 
 
@@ -80,6 +90,7 @@ def synced_publish_callback(payload: str, userdata) -> DopError:
         publish_lock.release()
 
     return err
+
 
 def thread_co2(configuration: dict, userdata, verbose):
     run: int = int(configuration['run'])
@@ -116,7 +127,16 @@ def thread_co2(configuration: dict, userdata, verbose):
         global_stop_event.wait(sleep)
 
 
-def main(configfile_path: str) -> int:
+
+def main(args) -> int:
+
+    #   Parse arguments
+    config_file = args.config 
+
+
+    if not os.path.exists(config_file):
+        return DopError(101,"Configuration file does not exist")
+
 
     #   prog default
     verbose: bool = False
@@ -130,7 +150,7 @@ def main(configfile_path: str) -> int:
     # ========================================================
     #   Configuration file
     # ========================================================
-    err, conf = DopUtils.parse_yaml_configuration(configfile_path)
+    err, conf = DopUtils.parse_yaml_configuration(config_file)
     if err.isError():
         return err
 
@@ -181,9 +201,9 @@ def main(configfile_path: str) -> int:
     userdata = PublisherUserdata()
     userdata.output_provider = output_provider
 
-    print(co2_conf)
-    print(prog_conf)
-    print(outputProvider_conf)
+    #print(co2_conf)
+    #print(prog_conf)
+    #print(outputProvider_conf)
 
 
     if verbose:
@@ -196,14 +216,14 @@ def main(configfile_path: str) -> int:
 
 
     # ====================================================================================
-    # Main Functionality
+    # Main Program
     # ====================================================================================
 
-    co2_p = Thread(target=thread_co2, args=(co2_conf, userdata, verbose))
-    co2_p.start()
+    co2_t = Thread(target=thread_co2, args=(co2_conf, userdata, verbose))
+    co2_t.start()
     time.sleep(1)
     
-    co2_p.join()
+    co2_t.join()
 
     prov_err = output_provider.close()
     return prov_err
@@ -213,6 +233,5 @@ if __name__ == "__main__":
     global_stop_event = DopStopEvent()
     signalManagement()
 
-    error: int = main(sys.argv[1])
+    error: int = main(get_args())
     print(error)
-
