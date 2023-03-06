@@ -122,14 +122,17 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
 
     sensor = CO2Meter(co2_driver)
 
+    counter:int = 0
+
     while True:   
         if global_stop_event.is_exiting():
             break
 
         #d = {}
         d = sensor.get_data()
-        d['now']=str(datetime.datetime.now())
-
+        d['now'] = str(datetime.datetime.now())
+        d['payload_number'] = f"{counter}"
+        counter = counter +1
         #   send to broker
         payload: str = str(d)
         
