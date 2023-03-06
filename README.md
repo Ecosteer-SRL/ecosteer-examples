@@ -1,17 +1,17 @@
 # ecosteer-examples
 
-The first example is found in sensor_stream directory: this is 
-a Python implementation of an mqtt publisher of a CO2 data stream. 
+The first example is found in sensor_stream directory: this is a Python implementation of an mqtt publisher of a CO2 data stream. 
 
-This implementation will be used to show how a data stream can be integrated 
-with the DVCO pub stack.
+This implementation will be used to show how a data stream can be integrated with the DVCO pub stack.
 
 # CO2 SENSOR 
+
 Sensor: TFA Monitor DE CO2 DOSTMANN AIRCO2NTROL Mini 1.5006, 31.5006.02
 
 The CO2Meter implementation thankfully provided by Michael Nosthoff in https://github.com/heinemml/CO2Meter was adapted for this project. 
 
 # INSTALLATION
+
 Connect the USB sensor to a Linux computer, such as an Ubuntu 18 or 
 to a Raspberry Pi Zero W board. It should be listed by inserting the following command: 
 ```
@@ -21,9 +21,10 @@ The output should contain the following entry:
 ```
 Bus 001 Device 003: ID 04d9:a052 Holtek Semiconductor, Inc. USB-zyTemp
 ```
-The hexadecimal ID contains four digits: 
-    - the first two (0x04d9) indicate the vendor id 
-    - the last two (0xa052) indicathe the product id 
+The hexadecimal ID contains four digits:   
+- the first two (0x04d9) indicate the vendor id;  
+- the last two (0xa052) indicathe the product id.  
+
 You can also check the product with the online search engine: https://www.the-sz.com/products/usbid/index.php?
 
 
@@ -41,19 +42,21 @@ root privileges. In order to avoid this issue create a file called 90-co2mini.ru
 It should contain the following contents:
 ```
 ACTION=="remove", GOTO="co2mini_end"
-SUBSYSTEMS=="usb", KERNEL=="hidraw*", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", GROUP="plugdev", MODE="0666", SYMLINK+="co2mini%n", GOTO="co2mini_end"
+SUBSYSTEMS=="usb", KERNEL=="hidraw*", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", GROUP="plugdev", MODE="0660", SYMLINK+="co2mini%n", GOTO="co2mini_end"
 LABEL="co2mini_end"
 ```
-The file instructs the OS to create a simlink called co2mini%n, where %n is a auto incrementing number, 
-for any USB with vendor id 04d9 and product id a052. The mask is 0666, which means
-that the file /dev/co2mini%n can be accessed by any user. 
+The file instructs the OS to create a simlink called co2mini%n, where %n is a auto incrementing number, for any USB with vendor id 04d9 and product id a052. The mask is 0660, which means that the file /dev/co2mini%n can be accessed by any user in the plugdev group. On debian systems, plugdev is a system group and the user you are using to ssh into the device should belong to the group. Check that plugdev is listed in your groups:
+```
+groups
+```
+Alternatively, if you are using an Ubuntu system that does not have the plugdev group, you can set the mode to 0666 in the above code snippet (MODE="0666") and you will be able to access the device with any user. 
 
-Now, every time the sensor will be re-connected to the computer it will be listed as co2mini%n in /dev directory. The entry
-needs to be passed as a configuration to CO2Meter.
+Now, every time the sensor will be re-connected to the computer it will be listed as co2mini%n in /dev directory. The entry needs to be passed as a configuration to CO2Meter.
 
 ## SOFTWARE DEPENDENCIES
-- Python version 3.9.10
-- paho-mqtt version 1.6.1
+
+- Python version 3.9.10  
+- paho-mqtt version 1.6.1  
 
 The paho-mqtt package can be installed in a virtualenv:
 ```
@@ -63,6 +66,7 @@ The paho-mqtt package can be installed in a virtualenv:
 ```
 
 ## INSTALL PROJECT AND RUN
+
 Clone this repo in a local folder called ecosteer_example/sensor_stream. 
 
 To run the sensor program:
@@ -72,13 +76,10 @@ To run the sensor program:
 > source env.sh 
 > python new_sensor.py ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml
 ```
-The env.sh file holds PYTHONPATH environmental variable that should point to the parent directory of the sensor directory.  
+The env.sh file holds PYTHONPATH environmental variable that should contain the path to the sensor_stream directory.  
 
 ### IMPLEMENTATION NOTES
-The mqtt output provider is not thread-safe, so the access to the method write() 
-is syncronized at the level of the main program. 
 
-In provider_pres_output.py and pres_output_mqtt.py there is a DopEvent type: the source file 
-for the DopEvent was not included in the repo, as it is not relevant for the project at hand. 
-Its definition nevertheless is needed as it is used as a parameter to the writeEvent() method, 
-therefore it was defined as a NewType. 
+The mqtt output provider is not thread-safe, so the access to the method write() is syncronized at the level of the main program. 
+
+In provider_pres_output.py and pres_output_mqtt.py there is a DopEvent type: the source file for the DopEvent was not included in the repo, as it is not relevant for the project at hand. Its definition nevertheless is needed as it is used as a parameter to the writeEvent() method, therefore it was defined as a NewType. 
