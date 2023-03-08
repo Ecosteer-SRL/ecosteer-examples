@@ -128,7 +128,6 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
         if global_stop_event.is_exiting():
             break
 
-        #d = {}
         d = sensor.get_data()
         d['now'] = str(datetime.datetime.now())
         d['payload_number'] = f"{counter}"
@@ -168,7 +167,7 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
         global_stop_event.wait(sleep)
 
 
-def main(args) -> int:
+def main(args) -> DopError:
 
     #   Parse arguments
     config_file = args.config 
@@ -200,14 +199,15 @@ def main(args) -> int:
     #   CO2
     co2_c = conf['co2']
     err, co2_conf = DopUtils.config_to_dict(co2_c['configuration'])
+    if err.isError():
+        return err
 
 
     #   mandatory args
     if 'driver' in co2_conf:
         co2_driver = co2_conf['driver']
     else:
-        print('Missing arg: co2: driver')
-        return 10
+        return DopError(10,'Missing arg: co2: driver') 
 
     if 'sleep' in co2_conf:
         co2_sleep = int(co2_conf['sleep'])
@@ -215,7 +215,9 @@ def main(args) -> int:
     #   PROG
     prog_c = conf['prog']
     err, prog_conf = DopUtils.config_to_dict(prog_c['configuration'])
-    
+    if err.isError():
+        return err 
+
     
     if 'v' in prog_conf:
         verbose = (prog_conf['v'] == '1')
@@ -252,8 +254,7 @@ def main(args) -> int:
             return DopError(2, "Error in loading JSON configuration file.")
     
     if 'loop_interval' not in dvco_conf:
-        print("Missing product arg: loop_interval")
-        return 11
+        return DopError(11,"Missing product arg: loop_interval")
 
 
     # Userdata 
@@ -305,6 +306,6 @@ if __name__ == "__main__":
     global_stop_event = DopStopEvent()
     signalManagement()
 
-    error: int = main(get_args())
+    error: DopError = main(get_args())
     print(error)
 

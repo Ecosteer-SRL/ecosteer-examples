@@ -105,7 +105,7 @@ def thread_co2(configuration: dict, userdata, verbose):
     while True:   
         if global_stop_event.is_exiting():
             break
-
+        
         d = sensor.get_data()
         d['now']=str(datetime.datetime.now())
 
@@ -128,7 +128,7 @@ def thread_co2(configuration: dict, userdata, verbose):
 
 
 
-def main(args) -> int:
+def main(args) -> DopError:
 
     #   Parse arguments
     config_file = args.config 
@@ -157,14 +157,14 @@ def main(args) -> int:
     #   CO2
     co2_c = conf['co2']
     err, co2_conf = DopUtils.config_to_dict(co2_c['configuration'])
-
+    if err.isError():
+        return err
 
     #   mandatory args
     if 'driver' in co2_conf:
         co2_driver = co2_conf['driver']
     else:
-        print('Missing arg: co2: driver')
-        return 10
+        return DopError(10,'Missing arg: co2: driver') 
 
     if 'sleep' in co2_conf:
         co2_sleep = int(co2_conf['sleep'])
@@ -172,7 +172,8 @@ def main(args) -> int:
     #   PROG
     prog_c = conf['prog']
     err, prog_conf = DopUtils.config_to_dict(prog_c['configuration'])
-    
+    if err.isError():
+        return err
     
     if 'v' in prog_conf:
         verbose = (prog_conf['v'] == '1')
@@ -209,7 +210,7 @@ def main(args) -> int:
     if verbose:
         print(f'Broker host       : {host}')
         print(f'Broker port       : {port}')
-        print(f'Bbroker topic     : {topic}') 
+        print(f'Broker topic     : {topic}') 
 
         print(f'CO2 driver        : {co2_driver}')
         print(f'CO2 sleep         : {co2_sleep}')
@@ -233,5 +234,5 @@ if __name__ == "__main__":
     global_stop_event = DopStopEvent()
     signalManagement()
 
-    error: int = main(get_args())
+    error: DopError = main(get_args())
     print(error)
