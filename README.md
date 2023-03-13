@@ -1,14 +1,27 @@
 # ecosteer-examples
 
-The first example is found in sensor_stream directory: this is a Python implementation of an mqtt publisher of a CO2 data stream. 
+The first example is found in sensor_stream directory, which contains a Python program that publishes real CO2 data points on an MQTT broker.
 
-This implementation will be used to show how a data stream can be integrated with the DVCO pub stack.
+Two versions of the program are provided:
+- sensor.py: a base implementation, without DVCO capabilities
+- dvco_sensor.py: an upgraded implementation of sensor.py, that contains the necessary calls to the DVCO pub stack primitives and dopifies the data streams
+
+The difference between these two programs is used to show how a general purpose data stream can be integrated with the DVCO pub stack.
+
+The sensor_stream directory contains the following subdirectories: 
+- common: collects modules shared between multiple classes in the project
+- dvco_stub: contains a stub implementation of the DVCO publisher stack, useful to show how a general purpose program can be integrated with the DVCO pub stack and become a DVCO-enabled publisher
+- externals: contains the code for reading CO2 data 
+- provider: contains a provider-based implementation of an MQTT client, used by the publisher to send data to a broker
+- sensor: contains the two versions of the program, sensor.py and dvco_sensor.py. As the dvco_sensor.py uses a stub implementation of the pub stack, the dopified data corresponds to the input data.
+
 
 # CO2 SENSOR 
 
 Sensor: TFA Monitor DE CO2 DOSTMANN AIRCO2NTROL Mini 1.5006, 31.5006.02
 
 The CO2Meter implementation thankfully provided by Michael Nosthoff in https://github.com/heinemml/CO2Meter was adapted for this project. 
+
 
 # INSTALLATION
 
@@ -53,6 +66,7 @@ Alternatively, if you are using an Ubuntu system that does not have the plugdev 
 
 Now, every time the sensor will be re-connected to the computer it will be listed as co2mini%n in /dev directory. The entry needs to be passed as a configuration to CO2Meter.
 
+
 ## SOFTWARE DEPENDENCIES
 
 - Python version 3.9.10  
@@ -60,23 +74,27 @@ Now, every time the sensor will be re-connected to the computer it will be liste
 
 The paho-mqtt package can be installed in a virtualenv:
 ```
-> virtualenv dop 
+> cd ${HOME}
+> mkdir -p virtualenv
+> cd virtualenv
+> python3.9 -m venv dop 
 > source dop/bin/activate
+> pip install wheel
 > pip install paho-mqtt 
 ```
 
 ## INSTALL PROJECT AND RUN
 
-Clone this repo in a local folder called ecosteer_example/sensor_stream. 
+Clone this repo in a local folder called ecosteer_examples/sensor_stream. 
 
 To run the sensor program:
 ```
-> source dop/bin/activate
-> cd ${HOME}/ecosteer_example/sensor_stream/sensor
+> source ~/virtualenv/dop/bin/activate
+> cd ${HOME}/ecosteer_examples/sensor_stream/sensor
 > source env.sh 
-> python new_sensor.py ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml
+> python sensor.py -c ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml
 ```
-The env.sh file holds PYTHONPATH environmental variable that should contain the path to the sensor_stream directory.  
+The env.sh file contains PYTHONPATH environmental variable that should indicate the path to the sensor_stream directory.  
 
 ### IMPLEMENTATION NOTES
 
