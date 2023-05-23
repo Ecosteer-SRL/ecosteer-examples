@@ -101,7 +101,7 @@ In order to run the dvco_sensor program the steps are similar. This will dopify 
 > source ~/virtualenv/dop/bin/activate
 > cd ${HOME}/ecosteer_examples/sensor_stream/sensor
 > source env.sh 
-> python sensor.py -c ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml -p product.json
+> python dvco_sensor.py -c ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml -p product.json
 ``` 
 
 ### IMPLEMENTATION NOTES
