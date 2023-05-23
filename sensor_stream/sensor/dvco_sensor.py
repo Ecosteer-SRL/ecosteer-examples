@@ -1,6 +1,9 @@
-#   ver:    1.0
-#   date:   03/03/2023
+#   ver:    1.1
+#   date:   23/05/2023
 #   author: georgiana-bud
+
+#   Version 1.1 
+#   Changed logic of callback method
 
 import argparse
 import datetime
@@ -20,6 +23,8 @@ from dvco_stub.pub_stack_stub import PubStackStub
 #   usage: sensor.py -c configFile.yaml -p product.json
 
 global_stop_event: DopStopEvent
+global_print_lock: Lock
+
 
 def get_args(argl = None):
     
@@ -54,8 +59,6 @@ def signalManagement():
 class PublisherUserdata:
     def __init__(self):
         self._output_provider = None
-        self._print_lock: Lock = Lock()
-        self._publish_lock: Lock = Lock()
 
         
     @property
@@ -66,37 +69,45 @@ class PublisherUserdata:
     def output_provider(self, output_provider):
         self._output_provider = output_provider 
 
-    @property 
-    def publish_lock(self):
-        return self._publish_lock 
-
-    @property
-    def print_lock(self):
-        return self._print_lock
 
 
 
-def synced_print_callback(msg: str, userdata):
-    publisher_userdata: PublisherUserdata = userdata 
-    print_lock = publisher_userdata.print_lock 
-    print_lock.acquire()
-    try:
+def synced_print(msg: str):
+    with global_print_lock:
         print(msg)
-    finally:
-        print_lock.release()    
+    
 
 
-def synced_publish_callback(payload: str, userdata) -> DopError:
+def publish_callback(payload: str, userdata) -> DopError:
     publisher_userdata: PublisherUserdata = userdata
     output_provider = publisher_userdata.output_provider
-    publish_lock = publisher_userdata.publish_lock 
-    publish_lock.acquire() 
-    try: 
-        err = output_provider.write(payload)
-    finally:
-        publish_lock.release()
+    #print(payload)
+    
+    err = output_provider.write(payload)
 
-    return err
+    if err.isError():
+        print(f"pub failure")
+        return DopError(2, "pub failure")
+    else:
+        print(f"pub ok")
+    return DopError()
+
+    
+    """
+    # A logic that retries to publish the message can be implemented here e.g.
+    while success == False:
+        err = output_provider.write(payload)
+            
+        if err.isError():
+            synced_print("pub failure")
+            time.sleep(2)
+        else:
+            success = True
+            synced_print("pub ok")
+
+    return DopError()
+    """
+
 
 def thread_dvco(configuration: dict, pub_stack, verbose):
     loop_interval = configuration['loop_interval']
@@ -108,7 +119,8 @@ def thread_dvco(configuration: dict, pub_stack, verbose):
         pub_stack.pump()
 
         time.sleep(loop_interval/1000)
-            
+        
+
     
 
 def thread_co2(configuration: dict, pub_stack, userdata, verbose):
@@ -132,38 +144,22 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
         d['now'] = str(datetime.datetime.now())
         d['payload_number'] = f"{counter}"
         counter = counter +1
-        #   send to broker
+        
+        #   dopify
         payload: str = str(d)
         
+        if verbose:
+            msg = {"hrMsg":"TRACE unencrypted payload",
+                "payload": payload
+            }   
+            synced_print(json.dumps(msg))
+
+
         res = pub_stack.dopify(payload.encode("UTF-8"))
         err = res[0]
-        dopified_payload_bytes = res[1]
-        dopified_payload = dopified_payload_bytes.decode("UTF-8")
-        
-        if verbose:
-            #synced_print_callback(payload, userdata)
-            msg = {"hrMsg":"TRACE unencrypted payload",
-                "payload": d
-            }   
-            synced_print_callback(json.dumps(msg), userdata)
-            synced_print_callback(dopified_payload, userdata)
+        dopified_mess = res[1] 
+        synced_print(dopified_mess.decode("UTF-8"))
 
-        if err.isError():
-            global_stop_event.wait(sleep)
-            continue
-            
-        success: bool = False
-        while success == False:
-
-            err = synced_publish_callback(dopified_payload, userdata)
-            if err.isError():
-                synced_print_callback("pub failure", userdata)
-                time.sleep(2)
-            else:
-                success = True
-                synced_print_callback("pub ok", userdata)
-                    
-        
         global_stop_event.wait(sleep)
 
 
@@ -281,7 +277,7 @@ def main(args) -> DopError:
     pub_stack.init(dvco_conf)
     pub_stack.attach_stop_event(global_stop_event)
     pub_stack.set_pub_userdata(userdata)
-    pub_stack.set_pub_callback(synced_publish_callback)
+    pub_stack.set_pub_callback(publish_callback)
 
     # ====================================================================================
     # Main Program
@@ -304,6 +300,7 @@ def main(args) -> DopError:
 if __name__ == "__main__":
     
     global_stop_event = DopStopEvent()
+    global_print_lock = Lock()
     signalManagement()
 
     error: DopError = main(get_args())
