@@ -58,11 +58,6 @@ def signalManagement():
 
 
 
-def synced_print(msg: str):
-    
-    with global_print_lock:
-        print(msg)
-    
         
 
 
@@ -80,6 +75,40 @@ class PublisherUserdata:
         self._output_provider = output_provider 
 
 
+
+def synced_print(msg: str):
+    
+    with global_print_lock:
+        print(msg)
+
+def publish(payload: str, userdata) -> DopError:
+    publisher_userdata: PublisherUserdata = userdata
+    output_provider = publisher_userdata.output_provider
+    
+    err = output_provider.write(payload)
+
+    if err.isError():
+        print(f"pub failure")
+        return DopError(2, "pub failure")
+    else:
+        print(f"pub ok")
+    return DopError()
+
+    
+    """
+    # A logic that retries to publish the message can be implemented here e.g.
+    while success == False:
+        err = output_provider.write(payload)
+            
+        if err.isError():
+            synced_print("pub failure")
+            time.sleep(2)
+        else:
+            success = True
+            synced_print("pub ok")
+
+    return DopError()
+    """
 
 
 
@@ -103,20 +132,9 @@ def thread_co2(configuration: dict, userdata: PublisherUserdata, verbose):
         #   send to broker
         payload: str = str(d)
         synced_print(payload)
-        success: bool = False
-        while success == False:
-            err = userdata.output_provider.write(payload)
-                
-            if err.isError():
-                synced_print("pub failure")
-                time.sleep(2)
-            else:
-                success = True
-                synced_print("pub ok")
-                
 
-        if verbose:
-            synced_print(payload)
+        err = publish(payload, userdata)
+
         global_stop_event.wait(sleep)
 
 
