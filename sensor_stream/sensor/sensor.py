@@ -2,8 +2,18 @@
 #   date:   03/03/2023
 #   author: georgiana-bud
 
+
+#   ver:    1.1 
+#   date:   17/05/2023
+#   author: georgiana-bud
+
+
+#   VER 1.1
+#   change locking, printing and publish mechanisms
+#   add indication of how to use new mqtt output client (not a dynamically loaded provider)
+
 import argparse
-import datetime
+import datetime 
 import os
 import signal
 import time
@@ -13,10 +23,13 @@ from externals.CO2Meter import *
 from common.python.utils import DopUtils
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
+#from provider.mqtt_output import MqttClient
 
 #   usage: sensor.py -c configFile.yaml
 
+# GLOBAL VARIABLES
 global_stop_event: DopStopEvent
+global_print_lock: Lock
 
 def get_args(argl = None):
     
@@ -44,11 +57,18 @@ def signalManagement():
     signal.signal(signal.SIGQUIT, signalHandlerExit)
 
 
+
+def synced_print(msg: str):
+    
+    with global_print_lock:
+        print(msg)
+    
+        
+
+
 class PublisherUserdata:
     def __init__(self):
         self._output_provider = None
-        self._print_lock: Lock = Lock()
-        self._publish_lock: Lock = Lock()
 
         
     @property
@@ -59,40 +79,11 @@ class PublisherUserdata:
     def output_provider(self, output_provider):
         self._output_provider = output_provider 
 
-    @property  
-    def publish_lock(self):
-        return self._publish_lock 
-
-    @property
-    def print_lock(self):
-        return self._print_lock
 
 
 
-def synced_print_callback(msg: str, userdata):
-    publisher_userdata: PublisherUserdata = userdata 
-    print_lock = publisher_userdata.print_lock 
-    print_lock.acquire()
-    try:
-        print(msg)
-    finally:
-        print_lock.release()    
 
-
-def synced_publish_callback(payload: str, userdata) -> DopError:
-    publisher_userdata: PublisherUserdata = userdata
-    output_provider = publisher_userdata.output_provider
-    publish_lock = publisher_userdata.publish_lock 
-    publish_lock.acquire() 
-    try: 
-        err = output_provider.write(payload)
-    finally:
-        publish_lock.release()
-
-    return err
-
-
-def thread_co2(configuration: dict, userdata, verbose):
+def thread_co2(configuration: dict, userdata: PublisherUserdata, verbose):
     run: int = int(configuration['run'])
     if run!=1:
         return
@@ -111,19 +102,21 @@ def thread_co2(configuration: dict, userdata, verbose):
 
         #   send to broker
         payload: str = str(d)
+        synced_print(payload)
         success: bool = False
         while success == False:
-            err = synced_publish_callback(payload, userdata)
+            err = userdata.output_provider.write(payload)
+                
             if err.isError():
-                synced_print_callback("pub failure", userdata)
+                synced_print("pub failure")
                 time.sleep(2)
             else:
                 success = True
-                synced_print_callback("pub ok", userdata)
+                synced_print("pub ok")
                 
 
         if verbose:
-            synced_print_callback(payload, userdata)
+            synced_print(payload)
         global_stop_event.wait(sleep)
 
 
@@ -179,17 +172,29 @@ def main(args) -> DopError:
         verbose = (prog_conf['v'] == '1')
 
     #   OUTPUT PROVIDER
+#    
     outputProvider_dict = conf['outputProvider']
     err, output_provider = DopUtils.load_provider(outputProvider_dict)
     if err.isError():
-        return err 
+        return err
+#
 
+#    outputProvider_c = conf['mqtt']
+#    err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_c['configuration'])
+
+#
     outputProvider_conf = outputProvider_dict['configuration']
     err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_conf)
+#
+
+#   output_provider = MqttClient()
+    
     tv, host = DopUtils.config_get_string(outputProv_conf_dict, ['h'], None)
     tv, port = DopUtils.config_get_int(outputProv_conf_dict, ['p'], 1883)
     tv, topic = DopUtils.config_get_string(outputProv_conf_dict, ['t'], None)
     prov_err = output_provider.init(outputProvider_conf)
+#    prov_err = output_provider.init(outputProvider_c['configuration'])
+ 
     if prov_err.isError():
         return prov_err
 
@@ -201,10 +206,6 @@ def main(args) -> DopError:
     # Userdata 
     userdata = PublisherUserdata()
     userdata.output_provider = output_provider
-
-    #print(co2_conf)
-    #print(prog_conf)
-    #print(outputProvider_conf)
 
 
     if verbose:
@@ -232,6 +233,7 @@ def main(args) -> DopError:
 if __name__ == "__main__":
     
     global_stop_event = DopStopEvent()
+    global_print_lock = Lock()
     signalManagement()
 
     error: DopError = main(get_args())
