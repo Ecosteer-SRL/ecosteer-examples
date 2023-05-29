@@ -78,10 +78,9 @@ def synced_print(msg: str):
     
 
 
-def publish_callback(payload: str, userdata) -> DopError:
+def publish(payload: str, userdata) -> DopError:
     publisher_userdata: PublisherUserdata = userdata
     output_provider = publisher_userdata.output_provider
-    #print(payload)
     
     err = output_provider.write(payload)
 
@@ -92,7 +91,6 @@ def publish_callback(payload: str, userdata) -> DopError:
         print(f"pub ok")
     return DopError()
 
-    
     """
     # A logic that retries to publish the message can be implemented here e.g.
     while success == False:
@@ -107,6 +105,14 @@ def publish_callback(payload: str, userdata) -> DopError:
 
     return DopError()
     """
+
+    
+
+
+def publish_callback(payload: str, userdata) -> DopError:
+    print(payload)
+    return publish(payload, userdata)
+
 
 
 def thread_dvco(configuration: dict, pub_stack, verbose):
@@ -158,7 +164,7 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
         res = pub_stack.dopify(payload.encode("UTF-8"))
         err = res[0]
         dopified_mess = res[1] 
-        synced_print(dopified_mess.decode("UTF-8"))
+        #synced_print(dopified_mess.decode("UTF-8"))
 
         global_stop_event.wait(sleep)
 
