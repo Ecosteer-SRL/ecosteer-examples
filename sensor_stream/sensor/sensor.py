@@ -118,13 +118,13 @@ def thread_co2(configuration: dict, userdata: PublisherUserdata, verbose):
     co2_driver = configuration['driver']
     sleep: int     = int(configuration['sleep'])
 
-    sensor = CO2Meter(co2_driver)
+    #sensor = CO2Meter(co2_driver)
 
     while True:   
         if global_stop_event.is_exiting():
             break
-        
-        d = sensor.get_data()
+        d = {}
+        #d = sensor.get_data()
         d['now']=str(datetime.datetime.now())
 
         #   send to broker
@@ -188,28 +188,30 @@ def main(args) -> DopError:
         verbose = (prog_conf['v'] == '1')
 
     #   OUTPUT PROVIDER
-#    
+
+
+#    outputProvider_c = conf['mqtt']
+#    outputProvider_conf = outputProvider_c['configuration']
+#    err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_conf)
+
+#    output_provider = MqttClient()
+  
     outputProvider_dict = conf['outputProvider']
     err, output_provider = DopUtils.load_provider(outputProvider_dict)
     if err.isError():
         return err
-#
 
-#    outputProvider_c = conf['mqtt']
-#    err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_c['configuration'])
 
-#
     outputProvider_conf = outputProvider_dict['configuration']
     err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_conf)
-#
 
-#   output_provider = MqttClient()
+
     
     tv, host = DopUtils.config_get_string(outputProv_conf_dict, ['h'], None)
     tv, port = DopUtils.config_get_int(outputProv_conf_dict, ['p'], 1883)
     tv, topic = DopUtils.config_get_string(outputProv_conf_dict, ['t'], None)
     prov_err = output_provider.init(outputProvider_conf)
-#    prov_err = output_provider.init(outputProvider_c['configuration'])
+
  
     if prov_err.isError():
         return prov_err
