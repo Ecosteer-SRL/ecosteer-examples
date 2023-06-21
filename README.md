@@ -96,6 +96,14 @@ To run the sensor program:
 ```
 The env.sh file contains PYTHONPATH environmental variable that should indicate the path to the sensor_stream directory.  
 
+In order to run the dvco_sensor program the steps are similar. This will dopify the data by using the stub implementation of the DVCO pub stack, and will publish it by using the callback installed on the stack.  
+```
+> source ~/virtualenv/dop/bin/activate
+> cd ${HOME}/ecosteer_examples/sensor_stream/sensor
+> source env.sh 
+> python dvco_sensor.py -c ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml -p product.json
+``` 
+
 ### IMPLEMENTATION NOTES
 
 The mqtt output provider is not thread-safe, so the access to the method write() is syncronized at the level of the main program. 
