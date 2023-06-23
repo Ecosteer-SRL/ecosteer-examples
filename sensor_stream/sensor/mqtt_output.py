@@ -47,7 +47,7 @@ class MqttClient:
         self._connection_event.clear()
         self._published_event: Event = Event()
 
-        super().__init__()
+        self._userdata = None
 
 
     def init(self,connstring: str) -> DopError:
@@ -65,7 +65,7 @@ class MqttClient:
         
         d_config: dict = tupleConfig[1]
         has_host, self._host = DopUtils.config_get_string(d_config, ['host','h'], None)
-        has_topic, self.topic = DopUtils.config_get_string(d_config, ['topic','t'], None)
+        has_topic, self._topic = DopUtils.config_get_string(d_config, ['topic','t'], None)
 
         wfc, self._bind_address = DopUtils.config_get_string(d_config,['bindaddress','ba'],"")
         wfc, self._port = DopUtils.config_get_int(d_config,['port','p'],1883)
@@ -105,11 +105,11 @@ class MqttClient:
     
     def attach_stop_event(self, stop_event: DopStopEvent):
         """
-        attach a stop event to the provider
+        attach a stop event to the client
 
-        the provider, by checking the status of the stop event, will know
-        if the provider consumer (the main process) has notified an exit condition
-        this is particularly useful if the provider implements retry loops that can be
+        the client, by checking the status of the stop event, will know
+        if the client consumer (the main process) has notified an exit condition
+        this is particularly useful if the client implements retry loops that can be
         stopped by an exit notification
         """
         self.i_stop_event = stop_event
@@ -255,3 +255,6 @@ class MqttClient:
 		
         return DopError(0, "Event published")
    
+   
+    def set_userdata(self,userdata):
+        self._userdata = userdata

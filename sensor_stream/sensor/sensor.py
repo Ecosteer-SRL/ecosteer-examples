@@ -1,11 +1,9 @@
-#   ver:    1.0
-#   date:   03/03/2023
+#   ver:    1.2 
+#   date:   23/06/2023
 #   author: georgiana-bud
 
-
-#   ver:    1.1 
-#   date:   17/05/2023
-#   author: georgiana-bud
+#   VER 1.2
+#   substitute mqtt output provider loaded dynamically with mqtt client
 
 
 #   VER 1.1
@@ -23,7 +21,7 @@ from externals.CO2Meter import *
 from common.python.utils import DopUtils
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
-#from provider.mqtt_output import MqttClient
+from mqtt_output import MqttClient
 
 #   usage: sensor.py -c configFile.yaml
 
@@ -80,6 +78,8 @@ def synced_print(msg: str):
         print(msg)
 
 def publish(payload: str, userdata) -> DopError:
+    """The synchronization of the access to this method is responsibility of
+    the calling context"""
     publisher_userdata: PublisherUserdata = userdata
     output_provider = publisher_userdata.output_provider
     
@@ -118,13 +118,13 @@ def thread_co2(configuration: dict, userdata: PublisherUserdata, verbose):
     co2_driver = configuration['driver']
     sleep: int     = int(configuration['sleep'])
 
-    sensor = CO2Meter(co2_driver)
+    #sensor = CO2Meter(co2_driver)
 
     while True:   
         if global_stop_event.is_exiting():
             break
-        
-        d = sensor.get_data()
+        d = {}
+        #d = sensor.get_data()
         d['now']=str(datetime.datetime.now())
 
         #   send to broker
@@ -187,43 +187,29 @@ def main(args) -> DopError:
     if 'v' in prog_conf:
         verbose = (prog_conf['v'] == '1')
 
-    #   OUTPUT PROVIDER
+    #   MQTT OUTPUT CLIENT
 
+    mqtt_c = conf['mqtt']
+    mqtt_conf = mqtt_c['configuration']
+    err, mqtt_conf_dict = DopUtils.config_to_dict(mqtt_conf)
 
-#    outputProvider_c = conf['mqtt']
-#    outputProvider_conf = outputProvider_c['configuration']
-#    err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_conf)
-
-#    output_provider = MqttClient()
-  
-    outputProvider_dict = conf['outputProvider']
-    err, output_provider = DopUtils.load_provider(outputProvider_dict)
-    if err.isError():
-        return err
-
-
-    outputProvider_conf = outputProvider_dict['configuration']
-    err, outputProv_conf_dict = DopUtils.config_to_dict(outputProvider_conf)
-
-
+    mqtt_client = MqttClient()
     
-    tv, host = DopUtils.config_get_string(outputProv_conf_dict, ['h'], None)
-    tv, port = DopUtils.config_get_int(outputProv_conf_dict, ['p'], 1883)
-    tv, topic = DopUtils.config_get_string(outputProv_conf_dict, ['t'], None)
-    prov_err = output_provider.init(outputProvider_conf)
-
- 
+    tv, host = DopUtils.config_get_string(mqtt_conf_dict, ['h'], None)
+    tv, port = DopUtils.config_get_int(mqtt_conf_dict, ['p'], 1883)
+    tv, topic = DopUtils.config_get_string(mqtt_conf_dict, ['t'], None)
+    prov_err = mqtt_client.init(mqtt_conf)
     if prov_err.isError():
         return prov_err
 
-    output_provider.attach_stop_event(global_stop_event)
-    prov_err = output_provider.open()
+    mqtt_client.attach_stop_event(global_stop_event)
+    prov_err = mqtt_client.open()
     if prov_err.isError():
         return prov_err
 
     # Userdata 
     userdata = PublisherUserdata()
-    userdata.output_provider = output_provider
+    userdata.output_provider = mqtt_client
 
 
     if verbose:
@@ -245,7 +231,7 @@ def main(args) -> DopError:
     
     co2_t.join()
 
-    prov_err = output_provider.close()
+    prov_err = mqtt_client.close()
     return prov_err
 
 if __name__ == "__main__":
