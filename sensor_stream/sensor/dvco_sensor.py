@@ -146,15 +146,14 @@ def thread_co2(configuration: dict, pub_stack, userdata, verbose):
     co2_driver = configuration['driver']
     sleep: int     = int(configuration['sleep'])
 
-    #sensor = CO2Meter(co2_driver)
+    sensor = CO2Meter(co2_driver)
 
     counter:int = 0
 
     while True:   
         if global_stop_event.is_exiting():
             break
-        d = {}
-        #d = sensor.get_data()
+        d = sensor.get_data()
         d['now'] = str(datetime.datetime.now())
         d['payload_number'] = f"{counter}"
         counter = counter +1
