@@ -12,8 +12,7 @@ The sensor_stream directory contains the following subdirectories:
 - common: collects modules shared between multiple classes in the project
 - dvco_stub: contains a stub implementation of the DVCO publisher stack, useful to show how a general purpose program can be integrated with the DVCO pub stack and become a DVCO-enabled publisher
 - externals: contains the code for reading CO2 data 
-- provider: contains a provider-based implementation of an MQTT client, used by the publisher to send data to a broker
-- sensor: contains the two versions of the program, sensor.py and dvco_sensor.py. As the dvco_sensor.py uses a stub implementation of the pub stack, the dopified data corresponds to the input data.
+- sensor: contains the two versions of the program, sensor.py and dvco_sensor.py. As the dvco_sensor.py uses a stub implementation of the pub stack, the dopified data corresponds to the input data. This folder also contains a package, mqtt_output.py, which offers a client implementation that wraps mqtt paho client. 
 
 
 # CO2 SENSOR 
@@ -104,8 +103,12 @@ In order to run the dvco_sensor program the steps are similar. This will dopify 
 > python dvco_sensor.py -c ${PATH_TO_CURRENT_DIRECTORY}/sensors_co2_mosq.yaml -p product.json
 ``` 
 
+
 ### IMPLEMENTATION NOTES
 
-The mqtt output provider is not thread-safe, so the access to the method write() is syncronized at the level of the main program. 
+The class MqttClient offers an implementation of a client for MQTT protocol to be used to publish data. 
+Its write() method is not thread-safe, so the access to it needs to be synchronized in a multi-threaded environment. 
 
-In provider_pres_output.py and pres_output_mqtt.py there is a DopEvent type: the source file for the DopEvent was not included in the repo, as it is not relevant for the project at hand. Its definition nevertheless is needed as it is used as a parameter to the writeEvent() method, therefore it was defined as a NewType. 
+The sensor program uses this method in a single thread, which is responsible for reading and publishing sensor data, and therefore no synchronization is implemented. 
+
+In the DVCO-instrumented implementation of the sensor program, this write() method of MqttClient is called inside the function used as the data callback by the DVCO stack. In this specific implementation, the callback (and thus the method write()) is solely called by the DVCO stack stub implementation, therefore the synchronization implemented by the DVCO stack provides the proper thread safety. If, instead, the function used as the data callback is used by threads that are not solely under the control of the DVCO-stack – then the same function has to be responsible for the necessary synchronization, as the DVCO-stack cannot be aware of all the threads firing the same function.

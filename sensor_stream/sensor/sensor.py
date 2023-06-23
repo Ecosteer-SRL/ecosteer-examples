@@ -79,7 +79,7 @@ def synced_print(msg: str):
 
 def publish(payload: str, userdata) -> DopError:
     """The synchronization of the access to this method is responsibility of
-    the calling context"""
+    the calling context in multi-threaded environments"""
     publisher_userdata: PublisherUserdata = userdata
     output_provider = publisher_userdata.output_provider
     
