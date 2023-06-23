@@ -1,20 +1,34 @@
-#   ver:    1.0
-#   date:   27/01/2023
+#   ver:    1.1
+#   date:   12/06/2023
 #   author: georgiana-bud
+
+# VER 1.1
+# support for micropython
 
 """
 Minimalistic implementation of platform's errors
 """
-from enum import Enum
+try: 
+    from enum import Enum
+        
+    class LogSeverity(Enum):
+            NONE = 0
+            DEBUG = 5
+            INFO = 4
+            WARN = 3
+            ERROR = 2
+            CRITICAL = 1
+
+except Exception: 
+    print("micropython")
+    def Enum(**kwargs):
+        return type('TEnum', (), kwargs)
+    LogSeverity = Enum(NONE=0,CRITICAL=1,ERROR=2,
+                       WARN=3, INFO=4, DEBUG=5)
+    
+
 import json
 
-class LogSeverity(Enum):
-        NONE = 0
-        DEBUG = 5
-        INFO = 4
-        WARN = 3
-        ERROR = 2
-        CRITICAL = 1
 
 class DopError:
     
@@ -28,7 +42,7 @@ class DopError:
         #   in order to flag the error as non recoverable, use method "rip" (rest in peace)
         self._recoverable: bool = True 
 
-        self._logSeverity: LogSeverity = LogSeverity.DEBUG 
+        self._logSeverity: LogSeverity = LogSeverity.DEBUG #in micropython, this print the associated int
 
         self._perr: DopError = None
                                         
