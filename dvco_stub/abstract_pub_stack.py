@@ -1,9 +1,26 @@
 
-from abc import ABC, abstractmethod
-from typing import Callable, Tuple
-
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
+
+try:
+    from typing import Callable, Tuple
+    from abc import ABC, abstractmethod 
+    
+except ImportError:
+
+    print("micropython")
+    
+    Callable = callable
+    Tuple = tuple
+
+    class ABC():
+        def __init__(self):
+            pass 
+    
+    def abstractmethod(func):
+        pass
+    
+
 
 class AbstractPubStack(ABC):
 
@@ -18,6 +35,7 @@ class AbstractPubStack(ABC):
     
     @abstractmethod 
     def init(self, pub_conf: dict):
+        self._stop_event = DopStopEvent()
         pass 
 
     

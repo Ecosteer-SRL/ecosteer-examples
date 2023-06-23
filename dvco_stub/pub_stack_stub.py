@@ -1,16 +1,30 @@
-
-from typing import Callable, Tuple
-from threading import Lock 
-
-
+from dvco_stub.abstract_pub_stack import AbstractPubStack
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
-from dvco_stub.abstract_pub_stack import AbstractPubStack
+
+upy: bool
+try:
+    from typing import Callable, Tuple
+    from threading import Lock 
+
+    upy = False 
+
+    
+except ImportError:
+    upy = True 
+    import _thread
+    Tuple = tuple
+
 
 class PubStackStub(AbstractPubStack):
     def __init__(self):
         super().__init__()
-        self._callback_lock: Lock = Lock()
+        if upy:
+            self._lock = _thread.allocate_lock()
+            self._callback_lock = _thread.allocate_lock() 
+        else: 
+            self._lock = Lock()
+            self._callback_lock = Lock()
 
 
     def init(self, pub_conf: dict):
