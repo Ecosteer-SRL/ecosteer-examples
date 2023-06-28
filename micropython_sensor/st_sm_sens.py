@@ -29,22 +29,6 @@ g_wdt_timeout: int = 20000          #   controls WDT timeout
 
 g_transport_file="transport.json"
 
-with open(g_transport_file) as transport:
-    transport_conf = json.loads(transport.read())
-
-    
-url = transport_conf['url']     #"mqtt://127.0.0.1:1883"
-try: 
-    url_arr = url.split(':')    #["mqtt", "//127.0.0.1", "1883"]
-    g_broker_hostname = url_arr[1][2:]       # "127.0.0.1" or "test.mosquitto.org" or any other broker
-    g_broker_port = int(url_arr[2])           # "1883"
-except Exception:
-    print("Url format not valid")
-    sys.exit()
-
-g_broker_topic_root = f'{transport_conf["topic"]}/'
-g_wifi_ssid = transport_conf["wifissid"]
-g_wifi_pwd = transport_conf["wifipass"]
 
 def disconnect():
     global g_mqtt_client
@@ -86,7 +70,7 @@ def connect():
 def publish(payload):
     global g_mqtt_client
     global g_broker_topic
-    #   try to send an infinite :) number of times
+    #   try to send an infinite number of times
     #   after a while the WTC will stop it
     while True:
         connect()
@@ -105,9 +89,9 @@ def loop_step(counter: int):
     err: int = 1
     while err==1:
         #   NOTE:
-        #   in case the sampling is not valid (this can happen, as it has been observed)
+        #   in case the sampling is not valid 
         #   then the function will enter an infinite loop, causing the WDT to go off
-        #   thus rebooting everythin
+        #   thus rebooting everything
         
         payload = {
             "payload_number": str(counter),
@@ -157,6 +141,25 @@ print('Too late')
 
 #   start the wtc
 g_main_wdt = WDT(timeout = g_wdt_timeout)
+
+
+with open(g_transport_file) as transport:
+    transport_conf = json.loads(transport.read())
+
+    
+url = transport_conf['url']     #"mqtt://127.0.0.1:1883"
+try: 
+    url_arr = url.split(':')    #["mqtt", "//127.0.0.1", "1883"]
+    g_broker_hostname = url_arr[1][2:]       # "127.0.0.1" or "test.mosquitto.org" or any other broker
+    g_broker_port = int(url_arr[2])           # "1883"
+except Exception:
+    print("Url format not valid")
+    sys.exit()
+
+g_broker_topic_root = f'{transport_conf["topic"]}/'
+g_wifi_ssid = transport_conf["wifissid"]
+g_wifi_pwd = transport_conf["wifipass"]
+
 
 #   scan the I2C bus
 i2c = I2C(scl=Pin(19,Pin.OUT), sda=Pin(18,Pin.OUT), freq=100000)

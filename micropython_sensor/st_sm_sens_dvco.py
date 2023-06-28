@@ -43,23 +43,6 @@ g_transport_file="transport.json"
 g_product_file= "product.json"
 
 
-with open(g_transport_file) as transport:
-    transport_conf = json.loads(transport.read())
-
-    
-url = transport_conf['url']     #"mqtt://127.0.0.1:1883"
-try: 
-    url_arr = url.split(':')    #["mqtt", "//127.0.0.1", "1883"]
-    g_broker_hostname = url_arr[1][2:]       # "127.0.0.1" or "test.mosquitto.org" or any other broker
-    g_broker_port = int(url_arr[2])           # "1883"
-except Exception:
-    print("Url format not valid")
-    sys.exit()
-
-g_broker_topic_root = f'{transport_conf["topic"]}/'
-g_wifi_ssid = transport_conf["wifissid"]
-g_wifi_pwd = transport_conf["wifipass"]
-
 def disconnect():
     global g_mqtt_client
     global g_mqtt_connected
@@ -169,9 +152,27 @@ print('Too late')
 
 
 
-
 #   start the wdt
 g_main_wdt = WDT(timeout = g_wdt_timeout)
+
+
+with open(g_transport_file) as transport:
+    transport_conf = json.loads(transport.read())
+
+    
+url = transport_conf['url']     #"mqtt://127.0.0.1:1883"
+try: 
+    url_arr = url.split(':')    #["mqtt", "//127.0.0.1", "1883"]
+    g_broker_hostname = url_arr[1][2:]       # "127.0.0.1" or "test.mosquitto.org" or any other broker
+    g_broker_port = int(url_arr[2])           # "1883"
+except Exception:
+    print("Url format not valid")
+    sys.exit()
+
+g_broker_topic_root = f'{transport_conf["topic"]}/'
+g_wifi_ssid = transport_conf["wifissid"]
+g_wifi_pwd = transport_conf["wifipass"]
+
 
 #   scan the I2C bus
 i2c = I2C(scl=Pin(19,Pin.OUT), sda=Pin(18,Pin.OUT), freq=100000)
