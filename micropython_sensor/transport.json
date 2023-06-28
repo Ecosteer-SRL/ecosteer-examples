@@ -1,0 +1,6 @@
+{
+    "url":"mqtt://test.mosquitto.org:1883",
+    "topic":"sens_dvco",
+    "wifissid":"YOUR-WIFI-SSID",
+    "wifipass":"YOUR-WIFI-PASSWORD"
+}
