@@ -3,7 +3,7 @@
 This project was sponsored by the [Provincia Autonoma di Bolzano (PAB)](https://home.provincia.bz.it/it/home), Italy.
 
 <p >
-  <img src="sudtirol_logo.png" width="30%"/>
+  <img src="https://github.com/Ecosteer-SRL/ecosteer_examples/blob/e311d2c1565c7745dde7e9d96825e0a6786f451c/pab_logo.png" width="30%"/>
 </p>
 
 
