@@ -1,4 +1,13 @@
-# ecosteer-examples
+
+# SPONSORS
+This project was sponsored by the [Provincia Autonoma di Bolzano (PAB)](https://home.provincia.bz.it/it/home), Italy.
+
+<p >
+  <img src="sudtirol_logo.png" width="30%"/>
+</p>
+
+
+# REPO STRUCTURE
 This repository collects some examples of applications that show the integration and usage of DVCO publisher stack APIs, of which a stub implementation is provided.  
 
 
