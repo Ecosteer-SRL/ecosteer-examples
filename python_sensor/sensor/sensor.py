@@ -17,7 +17,7 @@ import signal
 import time
 from threading import Event, Thread, Lock
 
-from externals.CO2Meter import *
+from python_sensor.externals.CO2Meter import *
 from common.python.utils import DopUtils
 from common.python.error import DopError
 from common.python.threads import DopStopEvent
@@ -118,13 +118,13 @@ def thread_co2(configuration: dict, userdata: PublisherUserdata, verbose):
     co2_driver = configuration['driver']
     sleep: int     = int(configuration['sleep'])
 
-    #sensor = CO2Meter(co2_driver)
+    sensor = CO2Meter(co2_driver)
 
     while True:   
         if global_stop_event.is_exiting():
             break
-        d = {}
-        #d = sensor.get_data()
+        #d = {}
+        d = sensor.get_data()
         d['now']=str(datetime.datetime.now())
 
         #   send to broker
