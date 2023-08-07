@@ -98,6 +98,7 @@ def _read24(arr):
     return ret
 
 
+
 class Adafruit_BME680:
     """Driver from BME680 air quality sensor
 
