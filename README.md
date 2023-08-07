@@ -19,7 +19,7 @@ The first example (in the python_sensor folder) is a Python program that publish
 
 For each example program, two versions (BEFORE and AFTER) are provided:
 - a base implementation <b>without</b> DVCO capabilities (python: sensor.py, Micropython: st_sm_sens.py)
-- an upgraded implementation <b>with</b> DVCO capabilities, that implements the necessary calls to the DVCO pub stack APIs and dopifies the data streams  (python: dvco_sensor.py, Micropython: st_sm_sens_dop.py)
+- an upgraded implementation <b>with</b> DVCO capabilities, that implements the necessary calls to the DVCO pub stack APIs and <b>dopifies</b> (applies end to end encryption for multicast scenario) the data streams  (python: dvco_sensor.py, Micropython: st_sm_sens_dop.py)
 
 The differences between the two versions (BEFORE and AFTER) show how a publisher program can be modified in order to use the DVCO pub stack. Please note that the DVCO publisher stack used in these examples is a stub implementation.
 
