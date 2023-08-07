@@ -17,13 +17,13 @@ The first example (in the python_sensor folder) is a Python program that publish
 </p>
 
 
-For each of the examples, two versions of the program are provided:
-- a base implementation, without DVCO capabilities (python: sensor.py, Micropython: st_sm_sens.py)
-- an upgraded implementation of the same program, that contains the necessary calls to the DVCO pub stack primitives and dopifies the data streams  (python: dvco_sensor.py, Micropython: st_sm_sens_dop.py)
+For each example program, two versions (BEFORE and AFTER) are provided:
+- a base implementation <b>without</b> DVCO capabilities (python: sensor.py, Micropython: st_sm_sens.py)
+- an upgraded implementation <b>with</b> DVCO capabilities, that implements the necessary calls to the DVCO pub stack APIs and dopifies the data streams  (python: dvco_sensor.py, Micropython: st_sm_sens_dop.py)
 
-The difference between these two programs is used to show how a general purpose data stream can be integrated with the DVCO pub stack.
+The differences between the two versions (BEFORE and AFTER) show how a publisher program can be modified in order to use the DVCO pub stack.
 
-The repository contains the following directories: 
+The repository contains the following folders: 
 - common: collects modules shared between multiple classes in the project, and between the Python and Micropython programs
 - dvco_stub: contains a stub implementation of the DVCO publisher stack, useful to show how a general-purpose program can be integrated with the DVCO pub stack and become a DVCO-enabled publisher
 - Micropython sensor: 
