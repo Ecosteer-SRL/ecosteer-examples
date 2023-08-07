@@ -8,7 +8,7 @@ This project was sponsored by the [Provincia Autonoma di Bolzano (PAB)](https://
 
 
 # REPO STRUCTURE
-This repository collects some examples to show how to use the DVCO (Data Visibility Control Overlay) stack APIs on the publisher side. Please note that the DVCO publisher stack used in these examples is a stub implementation.
+This repository collects some examples to show how to use the DVCO (Data Visibility Control Overlay) stack APIs in programs that publish data to a pub-sub broker, like a MQTT broker. 
 
 The first example (in the python_sensor folder) is a Python program that publishes real CO2 data points to a MQTT broker. The second example (in the micropython_sensor folder) is a Micropython program that publishes VOC, temp and humidity data to a MQTT broker. This program has been deployed and tested on a ESP32 microcontroller connected to a BME680 sensor, shown in the picture below.
 
@@ -21,7 +21,7 @@ For each example program, two versions (BEFORE and AFTER) are provided:
 - a base implementation <b>without</b> DVCO capabilities (python: sensor.py, Micropython: st_sm_sens.py)
 - an upgraded implementation <b>with</b> DVCO capabilities, that implements the necessary calls to the DVCO pub stack APIs and dopifies the data streams  (python: dvco_sensor.py, Micropython: st_sm_sens_dop.py)
 
-The differences between the two versions (BEFORE and AFTER) show how a publisher program can be modified in order to use the DVCO pub stack.
+The differences between the two versions (BEFORE and AFTER) show how a publisher program can be modified in order to use the DVCO pub stack. Please note that the DVCO publisher stack used in these examples is a stub implementation.
 
 The repository contains the following folders: 
 - common: collects modules shared between multiple classes in the project, and between the Python and Micropython programs
