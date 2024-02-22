@@ -1,0 +1,47 @@
+install python client API
+see url: https://docs.influxdata.com/influxdb/cloud/api-guide/client-libraries/python/
+pip install influxdb-client
+
+
+the testChain1.py writes rendom values to the bucket chain1 (tag PID) a random
+value every 5 seconds.
+The bucket belongs to the nen organization and the op is performed
+by a member of the the nen org with the token qGnzB0wzfMx9j6bMyDOUiaoaUIX9hIk9TJxBnoJr5jOgWwlifNw_BV9vxNF7D68XdhYkGPiCStIy9MYNgqssHw==
+The example is based on the call shown below (using curl)
+
+
+curl --request POST \
+"http://localhost:8086/api/v2/write?org=nen&bucket=chain1&precision=ns" \
+  --header "Authorization: Token qGnzB0wzfMx9j6bMyDOUiaoaUIX9hIk9TJxBnoJr5jOgWwlifNw_BV9vxNF7D68XdhYkGPiCStIy9MYNgqssHw==" \
+  --header "Content-Type: text/plain; charset=utf-8" \
+  --header "Accept: application/json" \
+  --data-binary '
+    chain1,PID=TLM0201 v=2
+    '
+
+the chain1subscriber.py transform a json object (as described in the docs) that contains
+CHAIN1 data.
+the properties withn the json object are
+category
+timestamp
+product_id
+ea
+er
+
+the ea and er are arrays holding 96 values (active energy and reactive energy)
+
+the program transform each of the contained values into a datapoint sent to an influxd
+bucket (chain1) that stores the following properties:
+measurement:	chain1
+PID:		product_id
+TYPE:		EA/ER
+V:		the value contained in the arrays
+
+please note that the first datapoint (from the first value in the array) will have
+the time set to the timestamp in the json object, the next datapoint (from the next value in the array)
+will have a timestamp increased by 900 seconds (15 mins) from the previous one
+in this way we will generate a set of data point that can be visualized providing a comprehensible
+views over EA and ER series
+
+the __main__ provided in the chain1subscriber is just an example on how to use
+the class Chain1ToInfluxdb
