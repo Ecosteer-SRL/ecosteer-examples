@@ -45,3 +45,7 @@ views over EA and ER series
 
 the __main__ provided in the chain1subscriber is just an example on how to use
 the class Chain1ToInfluxdb
+
+the file chain1,json holds a valid json frame that can be sent using the following command:
+mosquitto_pub -h mqtt_dev -t chain1 -f chain1.json
+

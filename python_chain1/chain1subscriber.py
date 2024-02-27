@@ -109,7 +109,8 @@ class Chain1ToInfluxdb:
         json_object: dict = {}
         try:
             json_object = json.loads(chain1_json)
-        except:
+        except json.JSONDecodeError as e:
+            print("Invalid JSON syntax:", e)
             return DopError(ERR_INVALID_JSON)
         
         #   the json frame has been parsed
@@ -148,7 +149,8 @@ class Chain1ToInfluxdb:
             org = self.__options['org']
             p = influxdb_client.Point(bucket).tag("PID", product_id).tag("TYPE",data_type).field("v", float(value)).time(int(timeofpoint)*1000000000)
             self.__write_api.write(bucket=bucket, org=org, record=p, time_precision='ns')
-        except:
+        except Exception as e:
+            print(e)
             return DopError(ERR_WRITING_POINT)
         
         return DopError(0)
@@ -188,8 +190,8 @@ if __name__ == "__main__":
     options: dict = {
     "bucket": "chain1",
     "org":"nen",
-    "token":"qGnzB0wzfMx9j6bMyDOUiaoaUIX9hIk9TJxBnoJr5jOgWwlifNw_BV9vxNF7D68XdhYkGPiCStIy9MYNgqssHw==",
-    "url":"http://34.154.145.92:8086"
+    "token":"RwzwWETiNYYsAn1W6rGsYJnjL1gxV_Xid9jEuA006f5U0ASAwsNiqZJBCP7HQwSFA1rTrf2TqfPsrPHe-zTlHg==",
+    "url":"http://34.88.70.190:8086"
     }
 
     inf = Chain1ToInfluxdb(options)
