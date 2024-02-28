@@ -2,14 +2,69 @@ install python client API
 see url: https://docs.influxdata.com/influxdb/cloud/api-guide/client-libraries/python/
 pip install influxdb-client
 
+to run the following programs
+1)	activate the virtual env
+2)	source python_env.sh
 
+programs:
+1) test.py
 the testChain1.py writes rendom values to the bucket chain1 (tag PID) a random
 value every 5 seconds.
 The bucket belongs to the nen organization and the op is performed
 by a member of the the nen org with the token qGnzB0wzfMx9j6bMyDOUiaoaUIX9hIk9TJxBnoJr5jOgWwlifNw_BV9vxNF7D68XdhYkGPiCStIy9MYNgqssHw==
 The example is based on the call shown below (using curl)
+use this script as refernce for the call to the influxdb api calls
+
+2) Chain1User.py
+This script receives string json objects sent to a configured MQTT topic.
+The file chain1.json contains a working example of a string json object.
+Please check it as this is the expected syntax (double quotes etc.)
+The program needs an argument - the path of the files that holds the configuration
+related to the input provider (in the example this is a MQTT input provider)
+and the configuration related to influxdb.
+Please note that the influxdb configuration segment (influxdb) has the (non-std)
+property 'token'. This is necessary as the DopUtils utilities would not
+be able to extract properly the token from the configuration (std) property.
+
+The Chain1User.py will transform the received json object that contains CHAIN1 data
+in a set of datapoints to be propagated to influxdb.
+the properties withn the json object MUST BE
+category
+timestamp
+product_id
+ea
+er
+the ea and er are arrays holding 96 values (active energy and reactive energy).
+The program transforms each of the contained values into a datapoint sent to an influxdb
+bucket (chain1) that stores the following properties:
+measurement:	chain1
+PID:		product_id
+TYPE:		EA/ER
+V:		the value contained in the arrays
+Please note that the first datapoint (from the first value in the array) will have
+the time set to the timestamp in the json object, the next datapoint (from the next value in the array)
+will have a timestamp increased by 900 seconds (15 mins) from the previous one.
+In this way we will generate a set of data points that can be visualized providing a 
+comprehensible dashboard over EA and ER series
+
+3) Chain1ToInfluxdb.py
+This program implements something very similar to a provider (it might be extended
+in order to comply to the output provider ABC later on.
+This script is imported and used by the program Chain1User.py.
+The __main__ provided in the Chain1ToInfluxdb is just an example on how to use
+the class Chain1ToInfluxdb
 
 
+Other files
+1)	chain1.conf
+this is the confguration file to be used by the program Chain1User.py
+
+2)	chain1.json
+this file containes a json object that can be sent to the Chain1User.py
+using mosquitto_pub with the following command:
+mosquitto_pub -h mqtt_dev -t chain1 -f chain1.json
+
+using curl to send a datapoint to influxdb
 curl --request POST \
 "http://localhost:8086/api/v2/write?org=nen&bucket=chain1&precision=ns" \
   --header "Authorization: Token qGnzB0wzfMx9j6bMyDOUiaoaUIX9hIk9TJxBnoJr5jOgWwlifNw_BV9vxNF7D68XdhYkGPiCStIy9MYNgqssHw==" \
@@ -19,33 +74,4 @@ curl --request POST \
     chain1,PID=TLM0201 v=2
     '
 
-the chain1subscriber.py transform a json object (as described in the docs) that contains
-CHAIN1 data.
-the properties withn the json object are
-category
-timestamp
-product_id
-ea
-er
-
-the ea and er are arrays holding 96 values (active energy and reactive energy)
-
-the program transform each of the contained values into a datapoint sent to an influxd
-bucket (chain1) that stores the following properties:
-measurement:	chain1
-PID:		product_id
-TYPE:		EA/ER
-V:		the value contained in the arrays
-
-please note that the first datapoint (from the first value in the array) will have
-the time set to the timestamp in the json object, the next datapoint (from the next value in the array)
-will have a timestamp increased by 900 seconds (15 mins) from the previous one
-in this way we will generate a set of data point that can be visualized providing a comprehensible
-views over EA and ER series
-
-the __main__ provided in the chain1subscriber is just an example on how to use
-the class Chain1ToInfluxdb
-
-the file chain1,json holds a valid json frame that can be sent using the following command:
-mosquitto_pub -h mqtt_dev -t chain1 -f chain1.json
 

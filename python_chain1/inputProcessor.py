@@ -1,15 +1,18 @@
-#   Chain1User
-#       uses data streams containing CHAIN1 data
+#   inputProvider:
+#     path:   '/home/ecosteer/monitor/ecosteer/dop/provider/presentation/input/pres_input_mqtt.py'
+#     class: 'inputMqttPaho'
+#     configuration: 'h=10.170.30.66;p=1883;t=test_topic;rc=10;ka=60;q=1;tout=10;prf=grz_;'
+
 #   auth:   graz
 #   vers:   0.1 
 #   date:   28/Feb/2024
 #   comp:   ecosteer
 
 
-
 #import pdb
 
 import sys
+#sys.path.append('../..')
 
 from typing import Tuple, Callable
 import json
